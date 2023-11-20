@@ -1,0 +1,30 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/elue-dev/usersapi/controllers"
+	"github.com/elue-dev/usersapi/database"
+	"github.com/gorilla/mux"
+)
+
+func initializeRouter() {
+	router := mux.NewRouter()
+
+	router.HandleFunc("/users", controllers.GetUsers).Methods("GET")
+	router.HandleFunc("/users/{id}", controllers.GetUser).Methods("GET")
+	router.HandleFunc("/users", controllers.CreateUser).Methods("POST")
+	router.HandleFunc("/users/{id}", controllers.UpdateUser).Methods("PUT")
+	router.HandleFunc("/users/{id}", controllers.DeleteUser).Methods("DELETE")
+
+	fmt.Println("Go server running on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
+
+}
+
+func main() {
+	database.InitialMigration()
+	initializeRouter()
+}
