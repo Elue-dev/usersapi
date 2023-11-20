@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -48,11 +50,30 @@ func InitialMigration() {
 
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	var users []User
+	DB.Find(&users)
+	json.NewEncoder(w).Encode(users)
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
 
+	var user User
+	result := DB.First(&user, params["id"])
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			http.Error(w, "User with id " +  params["id"] + " not found", http.StatusNotFound)
+		} else {
+			http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +89,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	 }
 
 	 user.Password = hashedPassword
+	
 
 	DB.Create(&user)
 
@@ -87,10 +109,44 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
 
+	var user User
+	result := DB.First(&user, params["id"])
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			http.Error(w, "User with id " +  params["id"] + " not found", http.StatusNotFound)
+		} else {
+			http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	json.NewDecoder(r.Body).Decode(&user)
+	DB.Save(&user)
+	json.NewEncoder(w).Encode(user)
 }
 
 func deleteuser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+
+	var user User
+	result := DB.First(&user, params["id"])
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			http.Error(w, "User with id " +  params["id"] + " not found", http.StatusNotFound)
+		} else {
+			http.Error(w, result.Error.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	DB.Delete(&user, params["id"])
+	json.NewEncoder(w).Encode("User has been deleted")
 
 }
 
