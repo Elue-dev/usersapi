@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
+	"context"
+
+	"github.com/cloudinary/cloudinary-go"
+	"github.com/cloudinary/cloudinary-go/api/uploader"
 	"github.com/elue-dev/usersapi/database"
 	"github.com/elue-dev/usersapi/helpers"
 	"github.com/elue-dev/usersapi/models"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
-
-
-
-
-var err error
 
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -48,9 +48,20 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	
 
 	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
+	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+    if err != nil {
+        log.Fatalf("Failed to parse form data: %v", err)
+        return
+    }
+
+	// json.NewDecoder(r.Body).Decode(&user)
+	user.FirstName = r.FormValue("first_name")
+    user.LastName = r.FormValue("last_name")
+    user.Email = r.FormValue("email")
+    user.Password = r.FormValue("password")
 
 	 hashedPassword, err := helpers.HashPassword(user.Password)
 	 if err != nil {
@@ -59,7 +70,32 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	 }
 
 	 user.Password = hashedPassword
-	
+
+	 file, _, err := r.FormFile("avatar")
+	 if err != nil {
+		 log.Fatalf("Failed to get avatar from form: %v", err)
+		 return
+	 }
+	 defer file.Close()
+ 
+	 cld, err := cloudinary.New()
+	 if err != nil {
+		 log.Fatalf("Failed to initialize Cloudinary: %v", err)
+		 return
+	 }
+ 
+	 var ctx = context.Background()
+	 uploadResult, err := cld.Upload.Upload(
+		 ctx,
+		 file,
+         uploader.UploadParams{PublicID: "avatar"})
+ 
+	 if err != nil {
+		 log.Fatalf("Failed to upload file: %v\n", err)
+		 return
+	 }
+  
+	 user.Avatar = uploadResult.SecureURL
 
 	 database.DB.Create(&user)
 
@@ -72,10 +108,10 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		LastName:  user.LastName,
 		Email:     user.Email,
 		Password:  user.Password,
+		Avatar: user.Avatar,
 	}
 	
 	json.NewEncoder(w).Encode(customUser)
-
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +164,8 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	database.DB.Delete(&user, params["id"])
 	json.NewEncoder(w).Encode("User has been deleted")
-
 }
+
+
+
 

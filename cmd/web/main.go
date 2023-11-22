@@ -8,9 +8,15 @@ import (
 	"github.com/elue-dev/usersapi/controllers"
 	"github.com/elue-dev/usersapi/database"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func initializeRouter() {
+	err := godotenv.Load()
+
+	if err != nil {
+	  log.Fatal("Error loading .env file")
+	}
 	router := mux.NewRouter()
 
 	router.HandleFunc("/users", controllers.GetUsers).Methods("GET")

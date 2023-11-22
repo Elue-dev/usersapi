@@ -14,3 +14,5 @@ $(EXECUTABLE):
 
 clean:
 	rm -rf $(EXECUTABLE_DIR)
+
+clean-run: clean run
