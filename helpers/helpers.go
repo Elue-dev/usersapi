@@ -1,6 +1,9 @@
 package helpers
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/elue-dev/usersapi/models"
+	"golang.org/x/crypto/bcrypt"
+)
 
 func HashPassword(password string) (string, error) {
     hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -8,4 +11,18 @@ func HashPassword(password string) (string, error) {
         return "", err
     }
     return string(hashedBytes), nil
+}
+
+func DatabaseUserToUserModel (dbUser models.User) models.CustomUser {
+	return models.CustomUser{
+		ID:           dbUser.ID,
+		CreatedAt:    dbUser.CreatedAt,
+		UpdatedAt:    dbUser.UpdatedAt,
+		DeletedAt:    dbUser.DeletedAt,
+		FirstName:    dbUser.FirstName,
+		LastName:     dbUser.LastName,
+		Email:        dbUser.Email,
+		Password:     dbUser.Password,
+		Avatar:       dbUser.Avatar,
+	}
 }

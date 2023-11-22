@@ -48,10 +48,9 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
 
 	var user models.User
-	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+	err := r.ParseMultipartForm(10 << 20)
     if err != nil {
         log.Fatalf("Failed to parse form data: %v", err)
         return
@@ -63,7 +62,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
     user.Email = r.FormValue("email")
     user.Password = r.FormValue("password")
 
-	 hashedPassword, err := helpers.HashPassword(user.Password)
+	hashedPassword, err := helpers.HashPassword(user.Password)
 	 if err != nil {
 		fmt.Println("Could not hash user password", err)
 		 return
@@ -98,20 +97,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	 user.Avatar = uploadResult.SecureURL
 
 	 database.DB.Create(&user)
-
-	customUser := models.CustomUser{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		DeletedAt: user.DeletedAt,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		Password:  user.Password,
-		Avatar: user.Avatar,
-	}
 	
-	json.NewEncoder(w).Encode(customUser)
+	json.NewEncoder(w).Encode(helpers.DatabaseUserToUserModel(user))
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
