@@ -24,7 +24,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	var users []models.User
 	database.DB.Find(&users)
-	json.NewEncoder(w).Encode(users)
+	json.NewEncoder(w).Encode(helpers.DatabaseUsersArrToUserModel(users))
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(helpers.DatabaseUserToUserModel(user))
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +130,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&user)
 	database.DB.Save(&user)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(helpers.DatabaseUserToUserModel(user))
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {

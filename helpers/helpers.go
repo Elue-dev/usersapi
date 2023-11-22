@@ -31,3 +31,12 @@ func DatabaseUserToUserModel (dbUser models.User) models.CustomUser {
 		Avatar:       dbUser.Avatar,
 	}
 }
+
+func DatabaseUsersArrToUserModel (dbUsers []models.User) []models.CustomUser {
+	users := []models.CustomUser{}
+
+	for _, dbUser := range dbUsers {
+		users = append(users, DatabaseUserToUserModel(dbUser))
+	}
+	return users
+}
