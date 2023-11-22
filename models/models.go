@@ -26,3 +26,8 @@ type CustomUser struct {
 	Password  string    `json:"password"`
 	Avatar string 		`json:"avatar"`
 }
+
+type Login struct {
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+}

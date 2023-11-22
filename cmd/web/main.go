@@ -28,6 +28,7 @@ func initializeRouter() {
 	router.HandleFunc("/users", controllers.CreateUser).Methods("POST")
 	router.HandleFunc("/users/{id}", controllers.UpdateUser).Methods("PUT")
 	router.HandleFunc("/users/{id}", controllers.DeleteUser).Methods("DELETE")
+	router.HandleFunc("/auth/login", controllers.Login).Methods("POST")
 
 	fmt.Println("Go server running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(allowedOrigins)(router)))

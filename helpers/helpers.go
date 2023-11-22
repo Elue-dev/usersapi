@@ -13,6 +13,11 @@ func HashPassword(password string) (string, error) {
     return string(hashedBytes), nil
 }
 
+func ComparePasswordWithHash(hashedPassword, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
+}
+
 func DatabaseUserToUserModel (dbUser models.User) models.CustomUser {
 	return models.CustomUser{
 		ID:           dbUser.ID,
