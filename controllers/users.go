@@ -3,14 +3,9 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
+	"strconv"
 
-	"context"
-
-	"github.com/cloudinary/cloudinary-go"
-	"github.com/cloudinary/cloudinary-go/api/uploader"
 	"github.com/elue-dev/usersapi/database"
 	"github.com/elue-dev/usersapi/helpers"
 	"github.com/elue-dev/usersapi/models"
@@ -24,7 +19,13 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	var users []models.User
 	database.DB.Find(&users)
-	json.NewEncoder(w).Encode(helpers.DatabaseUsersArrToUserModel(users))
+	// json.NewEncoder(w).Encode(helpers.DatabaseUsersArrToUserModel(users))
+	
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "success",
+		"total": len(users),
+		"users":  helpers.DatabaseUsersArrToUserModel(users),
+	})
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -43,63 +44,13 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(helpers.DatabaseUserToUserModel(user))
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "success",
+		"user":  helpers.DatabaseUserToUserModel(user),
+	})
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
-	var user models.User
-	err := r.ParseMultipartForm(10 << 20)
-    if err != nil {
-        log.Fatalf("Failed to parse form data: %v", err)
-        return
-    }
-
-	// json.NewDecoder(r.Body).Decode(&user)
-	user.FirstName = r.FormValue("first_name")
-    user.LastName = r.FormValue("last_name")
-    user.Email = r.FormValue("email")
-    user.Password = r.FormValue("password")
-
-	hashedPassword, err := helpers.HashPassword(user.Password)
-	 if err != nil {
-		fmt.Println("Could not hash user password", err)
-		 return
-	 }
-
-	 user.Password = hashedPassword
-
-	 file, _, err := r.FormFile("avatar")
-	 if err != nil {
-		 log.Fatalf("Failed to get avatar from form: %v", err)
-		 return
-	 }
-	 defer file.Close()
- 
-	 cld, err := cloudinary.New()
-	 if err != nil {
-		 log.Fatalf("Failed to initialize Cloudinary: %v", err)
-		 return
-	 }
- 
-	 var ctx = context.Background()
-	 uploadResult, err := cld.Upload.Upload(
-		 ctx,
-		 file,
-         uploader.UploadParams{PublicID: "avatar"})
- 
-	 if err != nil {
-		 log.Fatalf("Failed to upload file: %v\n", err)
-		 return
-	 }
-  
-	 user.Avatar = uploadResult.SecureURL
-
-	 database.DB.Create(&user)
-	
-	json.NewEncoder(w).Encode(helpers.DatabaseUserToUserModel(user))
-}
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -128,9 +79,14 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO: Update user db query
+	
 	json.NewDecoder(r.Body).Decode(&user)
 	database.DB.Save(&user)
-	json.NewEncoder(w).Encode(helpers.DatabaseUserToUserModel(user))
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "success",
+		"user":  helpers.DatabaseUserToUserModel(user),
+	})
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -149,8 +105,25 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userFromToken, err := helpers.GetUserFromToken(r)
+	if err != nil {
+		http.Error(w, "Error getting token", http.StatusInternalServerError)
+		return
+	}
+
+	if strconv.FormatUint(uint64(userFromToken.ID), 10) != params["id"] {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "You can only delete your account",
+		})
+		return
+	}
+
 	database.DB.Delete(&user, params["id"])
-	json.NewEncoder(w).Encode("User has been deleted")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "success",
+		"message": "User has been deleted",
+	})
 }
 
 

@@ -9,10 +9,10 @@ import (
 type User struct {
 	gorm.Model
 	FirstName string `json:"first_name"`
-	LastName string `json:"last_name"`
-	Email string `json:"email"`
-	Password string `json:"password"`
-	Avatar string `json:"avatar"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Avatar    string `json:"avatar"`
 }
 
 type CustomUser struct {
@@ -24,7 +24,7 @@ type CustomUser struct {
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
-	Avatar string 		`json:"avatar"`
+	Avatar    string 	`json:"avatar"`
 }
 
 type Login struct {

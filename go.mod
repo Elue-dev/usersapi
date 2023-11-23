@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/cloudinary/cloudinary-go v1.7.0 // indirect
 	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
